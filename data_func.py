@@ -1,3 +1,4 @@
+#dependencies
 import sys
 import os
 from tika import parser
@@ -13,6 +14,19 @@ from_list = []
 subject_list = []
 files_list = []
 
+#function to verify we have an email versus a calendar invite
+def cal_check(text):
+    pdfText = text
+    try:
+        check = pdfText.split('Meeting Status: ')
+        print(check[1])
+        msg_check = True
+        print('msg_check is True')
+    except:
+        msg_check = False
+        print('msg_check is False')
+    return msg_check
+
 #looping through the source folder and opening pdf files
 for filename in os.listdir('./source'):
     if filename.endswith(".pdf"):
@@ -21,44 +35,54 @@ for filename in os.listdir('./source'):
          #opening the target PDF
          reader = parser.from_file('./source/'+filename)
          pdfText = reader['content']
-         #getting the date
-         date_target = pdfText.split('Sent: ')
-         date_target = date_target[1].split('\n')
-         date_target_final=date_target[0]
-         date_entry=parse(date_target_final, fuzzy_with_tokens=True)
-         #getting the recipients
-         to_target = pdfText.split('To: ')
-         to_target = to_target[1].split('\n')
-         to_entry=to_target[0]
-         try:
-                cc_target = pdfText.split('Cc: ')
-                cc_target = cc_target[1].split('\n')
-                cc_entry=cc_target[0]
-         except:
-                cc_entry=''
-         #getting the sender
-         from_target = pdfText.split('From: ')
-         from_target = from_target[1].split('\n')
-         from_entry=from_target[0]
-          #getting the subjet
-         subject_target = pdfText.split('Subject: ')
-         subject_target = subject_target[1].split('\n')
-         subject_entry=subject_target[0]
-         #creating a date string as index for files
-         datestr = str(date_entry[0].year)+'-'+str(date_entry[0].month)+'-'+str(date_entry[0].day)+'-'+str(date_entry[0].hour)+str(date_entry[0].minute)
-         # Destination path for the labeled file
-         source = ('./source/'+filename)
-         destination = ("./out/"+datestr+'_filename'+'.pdf')
-         # Copy the content of
-         # source to destination
-         dest = shutil.copyfile(source, destination)
-         #adding metadata to our lists
-         date_list.append(datestr)
-         to_list.append(to_entry)
-         cc_list.append(cc_entry)
-         from_list.append(from_entry)
-         subject_list.append(subject_target)
-         files_list.append(datestr+'_filename'+'.pdf')
+         cal_item = cal_check(pdfText)
+         if cal_item is False:
+             #getting the date
+             date_target = pdfText.split('Sent: ')
+             date_target = date_target[1].split('\n')
+             date_target_final=date_target[0]
+             date_entry=parse(date_target_final, fuzzy_with_tokens=True)
+             #getting the recipients
+             to_target = pdfText.split('To: ')
+             to_target = to_target[1].split('\n')
+             to_entry=to_target[0]
+             try:
+                    cc_target = pdfText.split('Cc: ')
+                    cc_target = cc_target[1].split('\n')
+                    cc_entry=cc_target[0]
+             except:
+                    cc_entry=''
+             #getting the sender
+             from_target = pdfText.split('From: ')
+             from_target = from_target[1].split('\n')
+             from_entry=from_target[0]
+              #getting the subjet
+             subject_target = pdfText.split('Subject: ')
+             subject_target = subject_target[1].split('\n')
+             subject_entry=subject_target[0]
+             #creating a date string as index for files
+             datestr = str(date_entry[0].year)+'-'+str(date_entry[0].month)+'-'+str(date_entry[0].day)+'-'+str(date_entry[0].hour)+str(date_entry[0].minute)
+             # Destination path for the labeled file
+             source = ('./source/'+filename)
+             destination = ("./out/"+datestr+'_filename'+'.pdf')
+             # Copy the content of
+             # source to destination
+             dest = shutil.copyfile(source, destination)
+             #adding metadata to our lists
+             date_list.append(datestr)
+             to_list.append(to_entry)
+             cc_list.append(cc_entry)
+             from_list.append(from_entry)
+             subject_list.append(subject_entry)
+             files_list.append(datestr+'_filename'+'.pdf')
+         else:
+            #appending null entries for cal_item
+             date_list.append('calendar entry')
+             to_list.append('calendar entry')
+             cc_list.append('calendar entry')
+             from_list.append('calendar entry')
+             subject_list.append('calendar entry')
+             files_list.append('calendar entry')
     else:
         next
 
